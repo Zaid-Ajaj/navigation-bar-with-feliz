@@ -25,11 +25,11 @@ type NavigationItemProps = {
     icon: string
     titleVisible: bool
     url : string
+    active : bool
 }
 
-let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
+let navigationLink = React.functionComponent(fun (props: NavigationItemProps) ->
     let (hovered, setHovered) = React.useState(false)
-    let isActive = props.url  = Router.format(Array.ofList (Router.currentUrl()))
 
     Html.li [
         prop.onMouseEnter (fun _ -> setHovered(true))
@@ -42,7 +42,7 @@ let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
                     style.borderLeftWidth 3
                     style.borderLeftStyle borderStyle.solid
                     style.transitionDurationMilliseconds Constants.transitionSpeed
-                    if isActive then style.borderLeftColor Constants.navbarTextColor
+                    if props.active then style.borderLeftColor Constants.navbarTextColor
                     else if hovered then style.borderLeftColor Constants.navbarHoverBackgroundColor
                     else style.borderLeftColor Constants.navbarBackgroundColor
                 ]
@@ -58,7 +58,7 @@ let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
                             style.transitionDurationMilliseconds Constants.transitionSpeed
                             style.color.white
 
-                            if hovered || isActive then
+                            if hovered || props.active then
                                 style.color Constants.navbarTextColor
                                 style.backgroundColor Constants.navbarHoverBackgroundColor
                                 style.filter.grayscale 0
@@ -113,7 +113,7 @@ let navigationBarOpener = React.functionComponent(fun (props: NavigationBarOpene
                         prop.style [
                             style.display.flex
                             style.alignItems.center
-                            style.height (5 * Constants.fontSize)
+                            style.height Constants.miniNavigationBarWidth
                             style.textDecoration.none
                             style.transitionDurationMilliseconds Constants.transitionSpeed
                             style.color.white
@@ -144,6 +144,7 @@ type NavigationBarProps = {
     isOpen : bool
     hoverToOpen : bool
     onOpen : bool -> unit
+    currentUrl : string list
 }
 
 let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
@@ -165,34 +166,37 @@ let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
         prop.children [
             Html.ul [
                 prop.style [
-                    style.custom("listStyle", "none")
                     style.padding 0
                     style.margin 0
                     style.display.flex
+                    style.listStyleType.none
                     style.flexDirection.column
                     style.alignItems.center
                     style.height (length.vh(100))
                 ]
-
+                 
                 prop.children [
-                    navigationItem {
+                    navigationLink {
                         title = "Home"
                         icon = "home"
                         url = Router.format "/"
+                        active = props.currentUrl = [ ]
                         titleVisible = hovered || props.isOpen
                     }
 
-                    navigationItem {
+                    navigationLink {
                         title = "Contacts"
                         icon = "address-book"
                         url = Router.format "contacts"
+                        active = props.currentUrl = [ "contacts" ]
                         titleVisible = hovered || props.isOpen
                     }
 
-                    navigationItem {
+                    navigationLink {
                         title = "Settings"
                         icon = "cogs"
                         url = Router.format "settings"
+                        active = props.currentUrl = [ "settings" ]
                         titleVisible = hovered || props.isOpen
                     }
 
@@ -210,10 +214,12 @@ let mainLayout (state: State) (dispatch: Msg -> unit) (xs: ReactElement list) =
 
     let mainLayoutPadding = if state.NavigationBarOpen then Constants.fullNavigationBarWidth else Constants.miniNavigationBarWidth
     React.fragment [
+
         navigationBar {
             isOpen = state.NavigationBarOpen
             onOpen = fun _ -> dispatch ToggleNavigationBar
             hoverToOpen = false
+            currentUrl = state.CurrentUrl
         }
 
         Html.main [
