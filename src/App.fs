@@ -42,8 +42,8 @@ let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
                     style.borderLeftWidth 3
                     style.borderLeftStyle borderStyle.solid
                     style.transitionDurationMilliseconds Constants.transitionSpeed
-                    if isActive then style.borderLeftColor Constants.navigationBarColor
-                    else if hovered then style.borderLeftColor (color.rgba(10, 10, 10, 0.6))
+                    if isActive then style.borderLeftColor Constants.navbarTextColor
+                    else if hovered then style.borderLeftColor Constants.navbarHoverBackgroundColor
                     else style.borderLeftColor Constants.navbarBackgroundColor
                 ]
 
@@ -59,12 +59,11 @@ let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
                             style.color.white
 
                             if hovered || isActive then
-                                style.color Constants.navigationBarColor
+                                style.color Constants.navbarTextColor
+                                style.backgroundColor Constants.navbarHoverBackgroundColor
                                 style.filter.grayscale 0
                                 style.opacity 1.0
-                                style.backgroundColor (color.rgba(10, 10, 10, 0.6))
                             else
-                                style.color.white
                                 style.filter.grayscale 100
                                 style.opacity 0.7
                         ]
@@ -76,7 +75,7 @@ let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
                             ]
 
                             Html.span [
-                                prop.style [ if not props.titleVisible  then style.display.none ]
+                                prop.style [ if not props.titleVisible then style.display.none ]
                                 prop.text props.title
                             ]
                         ]
@@ -85,7 +84,6 @@ let navigationItem = React.functionComponent(fun (props: NavigationItemProps) ->
             ]
         ]
     ])
-
 
 type NavigationBarOpenerProps = {
     toggleOpened : unit -> unit
@@ -106,7 +104,7 @@ let navigationBarOpener = React.functionComponent(fun (props: NavigationBarOpene
                     style.borderLeftWidth 3
                     style.borderLeftStyle borderStyle.solid
                     style.transitionDurationMilliseconds Constants.transitionSpeed
-                    if hovered then style.borderLeftColor (color.rgba(10, 10, 10, 0.6))
+                    if hovered then style.borderLeftColor Constants.navbarHoverBackgroundColor
                     else style.borderLeftColor Constants.navbarBackgroundColor
                 ]
 
@@ -121,12 +119,11 @@ let navigationBarOpener = React.functionComponent(fun (props: NavigationBarOpene
                             style.color.white
 
                             if hovered then
-                                style.color Constants.navigationBarColor
+                                style.backgroundColor Constants.navbarHoverBackgroundColor
+                                style.color Constants.navbarTextColor
                                 style.filter.grayscale 0
                                 style.opacity 1.0
-                                style.backgroundColor (color.rgba(10, 10, 10, 0.6))
                             else
-                                style.color.white
                                 style.filter.grayscale 100
                                 style.opacity 0.7
                         ]
@@ -142,7 +139,6 @@ let navigationBarOpener = React.functionComponent(fun (props: NavigationBarOpene
             ]
         ]
     ])
-
 
 type NavigationBarProps = {
     isOpen : bool
