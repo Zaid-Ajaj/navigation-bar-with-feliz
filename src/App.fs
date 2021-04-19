@@ -2,33 +2,10 @@ module App
 
 open Feliz
 open Feliz.Router
-open Elmish
 
-type State = {
-    CurrentUrl: string list
-    NavigationBarOpen : bool
-}
 
-type Msg =
-    | UrlChanged of string list
-    | ToggleNavigationBar
-
-let init() = { CurrentUrl = Router.currentUrl(); NavigationBarOpen = false }, Cmd.none
-
-let update (msg: Msg) (state: State) =
-    match msg with
-    | UrlChanged nextUrl -> { state with CurrentUrl = nextUrl }, Cmd.none
-    | ToggleNavigationBar -> { state with NavigationBarOpen = not state.NavigationBarOpen }, Cmd.none
-
-type NavigationItemProps = {
-    title: string
-    icon: string
-    titleVisible: bool
-    url : string
-    active : bool
-}
-
-let navigationLink = React.functionComponent(fun (props: NavigationItemProps) ->
+[<ReactComponent>]
+let NavigationLink (props: PropTypes.NavigationLinkProps) =
     let (hovered, setHovered) = React.useState(false)
 
     Html.li [
@@ -83,14 +60,11 @@ let navigationLink = React.functionComponent(fun (props: NavigationItemProps) ->
                 ]
             ]
         ]
-    ])
+    ]
 
-type NavigationBarOpenerProps = {
-    toggleOpened : unit -> unit
-    isOpen : bool
-}
 
-let navigationBarOpener = React.functionComponent(fun (props: NavigationBarOpenerProps) ->
+[<ReactComponent>]
+let NavigationBarOpener (props: PropTypes.NavigationBarOpenerProps) =
     let (hovered, setHovered) = React.useState(false)
 
     Html.li [
@@ -138,16 +112,11 @@ let navigationBarOpener = React.functionComponent(fun (props: NavigationBarOpene
                 ]
             ]
         ]
-    ])
+    ]
 
-type NavigationBarProps = {
-    isOpen : bool
-    hoverToOpen : bool
-    onOpen : bool -> unit
-    currentUrl : string list
-}
 
-let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
+[<ReactComponent>]
+let NavigationBar (props: PropTypes.NavigationBarProps) =
     let (hovered, setHovered) = React.useState(false)
     let navigationBarWidth = if hovered || props.isOpen then Constants.fullNavigationBarWidth else Constants.miniNavigationBarWidth
     Html.nav [
@@ -174,9 +143,9 @@ let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
                     style.alignItems.center
                     style.height (length.vh(100))
                 ]
-                 
+
                 prop.children [
-                    navigationLink {
+                    NavigationLink {
                         title = "Home"
                         icon = "home"
                         url = Router.format "/"
@@ -184,7 +153,7 @@ let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
                         titleVisible = hovered || props.isOpen
                     }
 
-                    navigationLink {
+                    NavigationLink {
                         title = "Contacts"
                         icon = "address-book"
                         url = Router.format "contacts"
@@ -192,7 +161,7 @@ let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
                         titleVisible = hovered || props.isOpen
                     }
 
-                    navigationLink {
+                    NavigationLink {
                         title = "Settings"
                         icon = "cogs"
                         url = Router.format "settings"
@@ -200,7 +169,7 @@ let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
                         titleVisible = hovered || props.isOpen
                     }
 
-                    navigationBarOpener {
+                    NavigationBarOpener {
                         isOpen = props.isOpen
                         toggleOpened = fun _ -> props.onOpen(not props.isOpen)
                     }
@@ -208,18 +177,18 @@ let navigationBar = React.functionComponent(fun (props: NavigationBarProps) -> [
             ]
         ]
     ]
-])
 
-let mainLayout (state: State) (dispatch: Msg -> unit) (xs: ReactElement list) =
+[<ReactComponent>]
+let MainLayout (currentUrl: string list) (xs: ReactElement list) =
+    let navigationBarOpen, setNavigationBarOpen = React.useState(true)
 
-    let mainLayoutPadding = if state.NavigationBarOpen then Constants.fullNavigationBarWidth else Constants.miniNavigationBarWidth
+    let mainLayoutPadding = if navigationBarOpen then Constants.fullNavigationBarWidth else Constants.miniNavigationBarWidth
     React.fragment [
-
-        navigationBar {
-            isOpen = state.NavigationBarOpen
-            onOpen = fun _ -> dispatch ToggleNavigationBar
+        NavigationBar {
+            isOpen = navigationBarOpen
+            onOpen = fun _ -> setNavigationBarOpen(not navigationBarOpen)
             hoverToOpen = false
-            currentUrl = state.CurrentUrl
+            currentUrl = currentUrl
         }
 
         Html.main [
@@ -233,9 +202,12 @@ let mainLayout (state: State) (dispatch: Msg -> unit) (xs: ReactElement list) =
         ]
     ]
 
-let render (state: State) (dispatch: Msg -> unit) =
+
+[<ReactComponent>]
+let Router() =
+    let (currentUrl, updateUrl) = React.useState(Router.currentUrl())
     let activePage =
-        match state.CurrentUrl with
+        match currentUrl with
         | [  ] ->
             React.fragment [
                 Html.h1 "Navigation Bar with Feliz"
@@ -256,9 +228,9 @@ let render (state: State) (dispatch: Msg -> unit) =
         | [ "settings" ] -> Html.h1 "Settings"
         | _              -> Html.none
 
-    mainLayout state dispatch  [
-        Router.router [
-            Router.onUrlChanged (UrlChanged >> dispatch)
-            Router.application [ activePage ]
+    MainLayout currentUrl  [
+        React.router [
+            router.onUrlChanged updateUrl
+            router.children [ activePage ]
         ]
     ]

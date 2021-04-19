@@ -3,7 +3,6 @@ module Constants
 
 open Feliz
 
-let primaryColor = color.purple
 let navbarBackgroundColor = "#2A2C36"
 let navbarTextColor = color.mediumPurple
 let navbarHoverBackgroundColor = color.rgba(10, 10, 10, 0.6)
